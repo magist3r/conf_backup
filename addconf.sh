@@ -6,19 +6,32 @@ usage(){
 	echo "Usage: $0 <ACTION> [FILES]"
 }
 
+init(){
+	if [ ! -d "$GIT_PATH/.git" ]; then
+		cd "$GIT_PATH"
+		git init
+	fi
+}
+
 add(){
 	if [ "$#" = 0 ]; then
 		echo "No files to add"
 		usage
 		exit 1
 	fi
+        
+	if [ ! -f "$GIT_PATH/.files" ]; then
+		touch "$GIT_PATH/.files"
+	fi
 
 	while (( "$#" > 0 )); do
 		FNAME="$(readlink -f "$1")"
+		echo $FNAME
 		if [ -f "$FNAME" ]; then 					# Проверка существования файла
-			if [ -z "grep "$FNAME" "$GIT_PATH/.files" " ]; then	# Проверка существования файла в репозитории
+			grep "$FNAME" "$GIT_PATH/.files" > /dev/null
+			if [[ "$?" = 1 ]]; then					# Проверка существования файла в репозитории
 				cp "$1" "$GIT_PATH" 				# Копируем файл в каталог с репозиторием
-		 	 	echo "$FNAME" >> .files				# Добавляем полный путь к файлу в .files
+		 	 	echo "$FNAME" >> "$GIT_PATH/.files"		# Добавляем полный путь к файлу в .files
 			else 
 				update $FNAME
 			fi
@@ -69,7 +82,6 @@ push(){
 if [[ "$#" = 0 ]]; then
 	usage
 else
-	
 	case "$1" in
 		
 	"add")
@@ -90,7 +102,7 @@ else
 	;;
 
 	*)
-	echo "else"
+	usage	
         exit 0
 	;;
 	esac
