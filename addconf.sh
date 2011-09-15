@@ -22,6 +22,7 @@ add(){
         
 	if [ ! -f "$GIT_PATH/.files" ]; then
 		touch "$GIT_PATH/.files"
+		cd "$GIT_PATH" && git add .files
 	fi
 
 	while (( "$#" > 0 )); do
@@ -32,6 +33,8 @@ add(){
 			if [[ "$?" = 1 ]]; then					# Проверка существования файла в репозитории
 				cp "$1" "$GIT_PATH" 				# Копируем файл в каталог с репозиторием
 		 	 	echo "$FNAME" >> "$GIT_PATH/.files"		# Добавляем полный путь к файлу в .files
+				cd $GIT_PATH
+				git add "$(basename "$FNAME")"
 			else 
 				update $FNAME
 			fi
@@ -90,7 +93,7 @@ else
 	;;
 
 	"commit")
-	commit
+	commit "$@"
 	;;
 
 	"push")
