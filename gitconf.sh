@@ -3,7 +3,7 @@ GIT_PATH="/home/magist3r/code/conf_backup"
 CURDIR="$(pwd)"
 
 usage(){
-	echo "Usage: $0 <ACTION> [FILES]"
+	echo "Использование: $0 <команда> [файлы]"
 }
 
 init(){
@@ -15,7 +15,7 @@ init(){
 
 add(){
 	if [ "$#" = 0 ]; then
-		echo "No files to add"
+		echo "Не указаны файлы для добавления"
 		usage
 		exit 1
 	fi
@@ -39,14 +39,33 @@ add(){
 				update $FNAME
 			fi
 		else
-			echo "File not found... exiting"
+			echo "Файл $FNAME не найден."
 			usage
 			exit 1
 		fi			
 
 		shift
 	done
-#	sudo cp -a "$CURDIR$1" "$GITPATH" && cd $GIT_PATH && git add .
+}
+
+remove(){
+	if [ "$#" = 0 ]; then
+		echo "Не указаны файлы для удаления"
+		usage
+		exit 1
+	fi
+
+	while (( "$#" > 0 )); do
+		NAME="$(basename "$1")"
+		if [ -f "$GIT_PATH/$NAME" ]; then
+			git rm "$GIT_PATH/$NAME"
+			sed -i "/$NAME/d" "$GIT_PATH/.files"
+		else
+			echo "Нет такого файла в репозитории"
+			exit 1
+		fi
+		shift
+	done
 }
 
 update(){
@@ -81,6 +100,25 @@ push(){
 	git push origin master
 }	
 
+revert(){
+	if [ "$#" = 0 ]; then
+		while read line; do
+			NAME=$(basename "$line")
+			cp -a "$GIT_PATH/$NAME" "$line"
+		done < <(cat "$GIT_PATH/.files")	
+	else
+		while (( "$#" > 0 )); do
+			NAME="$(basename "$1")"
+			FNAME="$(grep "$1" "$GIT_PATH/.files")"
+			if [ ! -z "$FNAME" ]; then
+				cp -a "$GIT_PATH/$NAME" "$FNAME"
+			else
+				echo "Файла $FNAME нет в репозитории"
+			fi
+			shift
+		done
+	fi
+}
 
 if [[ "$#" = 0 ]]; then
 	usage
@@ -90,6 +128,11 @@ else
 	"add")
 	shift
 	add "$@"
+	;;
+	
+	"rm")
+	shift
+	remove "$@"
 	;;
 
 	"commit")
@@ -104,10 +147,15 @@ else
 	"update")
 	update
 	;;
+	
+	"revert")
+	shift
+	revert "$@"
+	;;
 
 	*)
 	usage	
-        exit 0
+        exit 1
 	;;
 	esac
 fi
