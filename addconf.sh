@@ -93,6 +93,7 @@ else
 	;;
 
 	"commit")
+	shift
 	commit "$@"
 	;;
 
