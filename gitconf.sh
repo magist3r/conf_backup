@@ -1,14 +1,27 @@
 #!/bin/bash
 GIT_PATH="/home/magist3r/code/conf_backup"
+GIT_REMOTE="git@github.com:magist3r/conf_backup.git"
 CURDIR="$(pwd)"
 
 usage(){
-	echo "Использование: $0 <команда> [файлы]"
+	echo "Использование: $0 <команда> [файлы]
+	Команды:
+	
+	init - инициализировать репозиторий;
+	add [файлы] - добавить файлы в репозиторий;
+	rm [файлы] - удалить файлы из репозитория;
+	commit [comment] - закоммитить изменения в репозиторий;
+	update [файлы] - обновить указанные файлы в репозитории;
+	update all - обновить все файлы в репозитории;
+	push - отправить коммиты в удаленный репозиторий;
+	restore [файлы] - восстановить указанные файлы из репозитория;
+	restore all - восстановить все файлы из репозитория;
+	usage - вывести эту справку."
 }
 
 init(){
 	if [ ! -d "$GIT_PATH/.git" ]; then
-		cd "$GIT_PATH" && git init
+		cd "$GIT_PATH" && git init && git remote add origin "$GIT_REMOTE"
 	fi
 }
 
