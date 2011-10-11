@@ -8,8 +8,7 @@ usage(){
 
 init(){
 	if [ ! -d "$GIT_PATH/.git" ]; then
-		cd "$GIT_PATH"
-		git init
+		cd "$GIT_PATH" && git init
 	fi
 }
 
@@ -100,18 +99,31 @@ push(){
 	git push origin master
 }	
 
-revert(){
+restore(){
 	if [ "$#" = 0 ]; then
+		echo "Не указаны файлы для восстановления. Для восстановления всех файлов используйте gitconf revert all"
+		exit 1
+	fi
+
+	if [ "$1" = "all" ]; then
 		while read line; do
 			NAME=$(basename "$line")
-			cp -a "$GIT_PATH/$NAME" "$line"
+			if [ "${line:0:6}" != "/home/" ]; then
+				sudo cp -a "$GIT_PATH/$NAME" "$line"
+			else
+				cp -a "$GIT_PATH/$NAME" "$line"
+			fi
 		done < <(cat "$GIT_PATH/.files")	
 	else
 		while (( "$#" > 0 )); do
-			NAME="$(basename "$1")"
 			FNAME="$(grep "$1" "$GIT_PATH/.files")"
-			if [ ! -z "$FNAME" ]; then
-				cp -a "$GIT_PATH/$NAME" "$FNAME"
+			NAME="$(basename "$FNAME")"
+			if [ ! -z "$NAME" ]; then
+				if [ "${FNAME:0:6}" != "/home/" ]; then
+					sudo cp -a "$GIT_PATH/$NAME" "$FNAME"
+				else
+					cp -a "$GIT_PATH/$NAME" "$FNAME"
+				fi
 			else
 				echo "Файла $FNAME нет в репозитории"
 			fi
@@ -148,9 +160,9 @@ else
 	update
 	;;
 	
-	"revert")
+	"restore")
 	shift
-	revert "$@"
+	restore "$@"
 	;;
 
 	*)
@@ -159,6 +171,4 @@ else
 	;;
 	esac
 fi
-
-
 exit 0
