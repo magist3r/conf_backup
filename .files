@@ -1,0 +1,4 @@
+/etc/dhcpd.conf
+/etc/hostapd.conf
+/etc/zypp/zypp.conf
+/home/magist3r/.bashrc
