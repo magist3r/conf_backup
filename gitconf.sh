@@ -31,7 +31,9 @@ add(){
 		usage
 		exit 1
 	fi
-        
+       
+       	cd "$GIT_PATH"
+
 	if [ ! -f "$GIT_PATH/.files" ]; then
 		touch "$GIT_PATH/.files"
 		cd "$GIT_PATH" && git add .files
@@ -39,13 +41,11 @@ add(){
 
 	while (( "$#" > 0 )); do
 		FNAME="$(readlink -f "$1")"
-		echo $FNAME
 		if [ -f "$FNAME" ]; then 					# Проверка существования файла
 			grep "$FNAME" "$GIT_PATH/.files" > /dev/null
 			if [[ "$?" = 1 ]]; then					# Проверка существования файла в репозитории
 				cp "$1" "$GIT_PATH" 				# Копируем файл в каталог с репозиторием
 		 	 	echo "$FNAME" >> "$GIT_PATH/.files"		# Добавляем полный путь к файлу в .files
-				cd $GIT_PATH
 				git add "$(basename "$FNAME")"
 			else 
 				update $FNAME
@@ -67,6 +67,8 @@ remove(){
 		exit 1
 	fi
 
+	cd "$GIT_PATH"
+
 	while (( "$#" > 0 )); do
 		NAME="$(basename "$1")"
 		if [ -f "$GIT_PATH/$NAME" ]; then
@@ -81,13 +83,14 @@ remove(){
 }
 
 update(){
-	if [ ! -z "$1" ] && [ -f "$1" ]; then
-		NAME=$(basename "$1")
-		diff "$NAME" "$1" > /dev/null
-		if [[ "$?" = 1 ]]; then
-			cp -a "$1" "$GIT_PATH"
-		fi
-	else
+	if [ "$#" = 0 ]; then
+		echo "Не указаны файлы для обновления. Для обновления всех файлов используйте gitconf update all"
+		exit 1
+	fi
+
+	cd "$GIT_PATH"
+
+	if [ "$1" = "all" ]; then
 		while read line; do
 			NAME=$(basename "$line")
 			diff "$NAME" "$line" > /dev/null
@@ -95,6 +98,18 @@ update(){
 				cp -a "$line" "$GIT_PATH"
 	       	        fi	       
 		done < <(cat "$GIT_PATH/.files")	
+	else
+		while (( "$#" > 0 )); do
+			FNAME="$(grep "$1" "$GIT_PATH/.files")"
+			NAME="$(basename "$FNAME")"
+			if [ ! -z "$NAME" ]; then
+				diff "$NAME" "$FNAME" > /dev/null
+				if [[ "$?" = 1 ]]; then
+					cp -a "$FNAME" "$GIT_PATH"
+				fi
+			fi
+			shift
+		done
 	fi
 }
 
@@ -117,6 +132,8 @@ restore(){
 		echo "Не указаны файлы для восстановления. Для восстановления всех файлов используйте gitconf revert all"
 		exit 1
 	fi
+
+	cd "$GIT_PATH"
 
 	if [ "$1" = "all" ]; then
 		while read line; do
@@ -150,6 +167,11 @@ if [[ "$#" = 0 ]]; then
 else
 	case "$1" in
 		
+	"init")
+	shift
+	init
+	;;
+	
 	"add")
 	shift
 	add "$@"
@@ -170,7 +192,8 @@ else
 	;;
 
 	"update")
-	update
+	shift
+	update "$@"
 	;;
 	
 	"restore")
