@@ -2,3 +2,5 @@
 /etc/hostapd.conf
 /etc/zypp/zypp.conf
 /home/magist3r/.bashrc
+/home/magist3r/123.txt
+/etc/samba/smb.conf
