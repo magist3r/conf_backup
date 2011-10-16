@@ -124,7 +124,7 @@ commit(){
 
 push(){
 	cd "$GIT_PATH"
-	git push origin master
+	git push origin
 }	
 
 restore(){
